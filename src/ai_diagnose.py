@@ -53,18 +53,38 @@ Return ONLY valid JSON following the schema above. No extra text.
 
 # ─── Gemini API Call ──────────────────────────────────────────────────────────
 
-def call_gemini(prompt: str) -> str:
-    """Send prompt to Gemini and return raw text response."""
-    client   = genai.Client(api_key=GEMINI_API_KEY)
-    response = client.models.generate_content(
-        model=GEMINI_MODEL,
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            temperature=0.2,
-            max_output_tokens=1024,
-        )
-    )
-    return response.text.strip()
+def call_gemini(prompt: str, retries: int = 4) -> str:
+    """Send prompt to Gemini with exponential backoff retry on 503 errors."""
+    import warnings
+    warnings.filterwarnings("ignore")   # Suppress AFC warnings
+
+    client = genai.Client(api_key=GEMINI_API_KEY)
+    delay  = 5  # seconds — doubles on each retry
+
+    for attempt in range(1, retries + 1):
+        try:
+            response = client.models.generate_content(
+                model=GEMINI_MODEL,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    temperature=0.2,
+                    max_output_tokens=1024,
+                )
+            )
+            return response.text.strip()
+
+        except Exception as e:
+            err_str = str(e)
+            is_503  = "503" in err_str or "UNAVAILABLE" in err_str
+            is_last = attempt == retries
+
+            if is_503 and not is_last:
+                print(f"    [RETRY {attempt}/{retries}] 503 overloaded — waiting {delay}s...")
+                time.sleep(delay)
+                delay *= 2   # Exponential backoff: 5s → 10s → 20s → 40s
+            else:
+                raise   # Not a 503, or last attempt — re-raise to caller
+
 
 
 
@@ -155,17 +175,20 @@ def main():
                 ai_response  = extract_json(raw_response)
                 accuracy     = check_accuracy(ai_response, case["expected_fault"])
 
-                # Save individual response
-                output = {
-                    "case_id":        case_id,
-                    "symptom":        case["symptom"],
-                    "expected_fault": case["expected_fault"],
-                    "ai_response":    ai_response,
-                    "accuracy":       accuracy,
-                    "review_status":  "PENDING"
-                }
-                with open(response_file, "w", encoding="utf-8") as f:
-                    json.dump(output, f, indent=2)
+                # Only save if no error — so failed cases are retried on next run
+                if "error" not in ai_response:
+                    output = {
+                        "case_id":        case_id,
+                        "symptom":        case["symptom"],
+                        "expected_fault": case["expected_fault"],
+                        "ai_response":    ai_response,
+                        "accuracy":       accuracy,
+                        "review_status":  "PENDING"
+                    }
+                    with open(response_file, "w", encoding="utf-8") as f:
+                        json.dump(output, f, indent=2)
+                else:
+                    accuracy = "PARSE_ERROR"
 
                 # Rate limiting — avoid hitting API too fast
                 time.sleep(1)
