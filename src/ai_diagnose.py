@@ -19,7 +19,7 @@ from google.genai import types
 
 # ─── Configuration ────────────────────────────────────────────────────────────
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "YOUR_GEMINI_API_KEY_HERE")
-GEMINI_MODEL   = "gemini-2.0-flash"      # Fast and cost-effective
+GEMINI_MODEL   = "gemini-3.6-flash"      # Fast and cost-effective
 
 BASE_DIR       = Path(__file__).parent.parent
 CASES_FILE     = BASE_DIR / "data" / "cases.csv"

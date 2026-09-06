@@ -104,11 +104,26 @@ def chart_agreement(rai_log: list[dict], responses: list[dict]):
     if pending_count > 0:
         decisions["PENDING"] = pending_count
 
+    fig, ax = plt.subplots(figsize=(7, 7))
+
+    # Handle empty state — no reviews yet
+    if not decisions or sum(decisions.values()) == 0:
+        ax.text(0.5, 0.5, "No reviews yet.\nRun human_review.py\nto review AI diagnoses.",
+                ha="center", va="center", fontsize=14, color="#999",
+                transform=ax.transAxes,
+                bbox=dict(boxstyle="round,pad=0.5", facecolor="#f5f5f5", edgecolor="#ddd"))
+        ax.set_title("AI Diagnosis Agreement Rate\n(Pending reviews)", fontsize=14, fontweight="bold")
+        ax.axis("off")
+        plt.tight_layout()
+        fig.savefig(CHART_AGREE, dpi=150, bbox_inches="tight")
+        plt.close(fig)
+        print(f"  [SAVED] Agreement chart   → {CHART_AGREE} (no reviews yet)")
+        return
+
     labels  = list(decisions.keys())
     values  = list(decisions.values())
     colours = [COLOURS.get(l, "#607D8B") for l in labels]
 
-    fig, ax = plt.subplots(figsize=(7, 7))
     wedges, texts, autotexts = ax.pie(
         values,
         labels=None,
@@ -135,6 +150,7 @@ def chart_agreement(rai_log: list[dict], responses: list[dict]):
     fig.savefig(CHART_AGREE, dpi=150, bbox_inches="tight")
     plt.close(fig)
     print(f"  [SAVED] Agreement chart   → {CHART_AGREE}")
+
 
 
 # ─── HTML Report ──────────────────────────────────────────────────────────────
