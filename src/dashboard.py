@@ -30,10 +30,10 @@ CHART_ISSUES  = REPORT_DIR / "chart_issue_types.png"
 CHART_AGREE   = REPORT_DIR / "chart_agreement.png"
 
 COLOURS = {
-    "ACCEPTED": "#4CAF50",
-    "EDITED":   "#FF9800",
-    "REJECTED": "#F44336",
-    "PENDING":  "#9E9E9E"
+    "ACCEPTED": "#6CC04A",  # Cisco Green
+    "EDITED":   "#FDB813",  # Cisco Yellow
+    "REJECTED": "#E2231A",  # Cisco Red
+    "PENDING":  "#94A3B8"   # Slate gray
 }
 
 # ─── Load Data ────────────────────────────────────────────────────────────────
@@ -73,7 +73,8 @@ def chart_issue_types(cases: list[dict]):
     values, labels = zip(*sorted_pairs)
 
     fig, ax = plt.subplots(figsize=(12, 6))
-    bars = ax.barh(labels, values, color="#1565C0", edgecolor="white", height=0.6)
+    ax.set_facecolor("#F8FAFC")
+    bars = ax.barh(labels, values, color="#00BCEB", edgecolor="white", height=0.6)
 
     # Add value labels on bars
     for bar, val in zip(bars, values):
@@ -167,22 +168,22 @@ def generate_html(cases: list[dict], rai_log: list[dict], responses: list[dict])
     corrected = [r for r in rai_log if r["review_decision"] in ("EDITED", "REJECTED")]
     corrected_rows = ""
     for r in corrected:
-        badge_colour = "#FF9800" if r["review_decision"] == "EDITED" else "#F44336"
+        badge_colour = "#FDB813" if r["review_decision"] == "EDITED" else "#E2231A"
         corrected_rows += f"""
         <tr>
-          <td><strong>{r['case_id']}</strong></td>
+          <td style="font-family: monospace;"><strong>{r['case_id']}</strong></td>
           <td>{r['symptom'][:80]}...</td>
           <td>{r['ai_root_cause'][:80]}...</td>
           <td>{r['reviewer_correction'] or '—'}</td>
           <td>{r['reviewer_reason'] or '—'}</td>
-          <td><span style="background:{badge_colour};color:white;padding:2px 8px;border-radius:12px;font-size:12px">{r['review_decision']}</span></td>
+          <td><span style="background:{badge_colour};color:white;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:bold;letter-spacing:0.5px;">{r['review_decision']}</span></td>
         </tr>"""
 
     # Severity breakdown
     sev_counts = Counter(c["severity"] for c in cases)
     sev_html   = "".join(
-        f'<span style="background:{"#F44336" if s=="Critical" else "#FF9800" if s=="High" else "#4CAF50"};'
-        f'color:white;padding:4px 12px;border-radius:12px;margin:4px;display:inline-block">{s}: {n}</span>'
+        f'<span style="background:{"#E2231A" if s=="Critical" else "#FDB813" if s=="High" else "#6CC04A"};'
+        f'color:white;padding:4px 12px;border-radius:4px;margin:4px;display:inline-block;font-weight:bold;">{s}: {n}</span>'
         for s, n in sorted(sev_counts.items())
     )
 
@@ -194,26 +195,26 @@ def generate_html(cases: list[dict], rai_log: list[dict], responses: list[dict])
 <title>NetSage AI — Dashboard Report</title>
 <style>
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-  body {{ font-family: 'Segoe UI', Arial, sans-serif; background: #f5f7fa; color: #333; }}
-  .header {{ background: linear-gradient(135deg, #1565C0, #0D47A1); color: white; padding: 40px; text-align: center; }}
-  .header h1 {{ font-size: 2.2em; margin-bottom: 8px; }}
-  .header p  {{ opacity: 0.85; font-size: 1.1em; }}
+  body {{ font-family: 'CiscoSans', 'Segoe UI', Arial, sans-serif; background: #F2F4F7; color: #1E293B; }}
+  .header {{ background: #051024; color: #FFFFFF; padding: 40px; text-align: center; border-bottom: 4px solid #00BCEB; }}
+  .header h1 {{ font-size: 2.2em; margin-bottom: 8px; font-weight: 300; letter-spacing: -0.5px; }}
+  .header p  {{ color: #94A3B8; font-size: 1.1em; }}
   .container {{ max-width: 1200px; margin: 30px auto; padding: 0 20px; }}
   .stats-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin: 30px 0; }}
-  .stat-card  {{ background: white; border-radius: 12px; padding: 24px; text-align: center;
-                 box-shadow: 0 2px 12px rgba(0,0,0,0.08); }}
-  .stat-card .num {{ font-size: 2.8em; font-weight: 800; color: #1565C0; }}
-  .stat-card .label {{ color: #666; font-size: 0.95em; margin-top: 6px; }}
-  .section {{ background: white; border-radius: 12px; padding: 28px; margin: 24px 0;
-              box-shadow: 0 2px 12px rgba(0,0,0,0.08); }}
-  .section h2 {{ font-size: 1.4em; margin-bottom: 20px; color: #1565C0; border-bottom: 2px solid #e3f2fd; padding-bottom: 10px; }}
+  .stat-card  {{ background: white; border-radius: 4px; padding: 24px; text-align: center;
+                 border: 1px solid #E2E8F0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }}
+  .stat-card .num {{ font-size: 2.8em; font-weight: 300; color: #00BCEB; }}
+  .stat-card .label {{ color: #64748B; font-size: 0.95em; margin-top: 6px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }}
+  .section {{ background: white; border-radius: 4px; padding: 28px; margin: 24px 0;
+              border: 1px solid #E2E8F0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }}
+  .section h2 {{ font-size: 1.4em; margin-bottom: 20px; color: #051024; border-bottom: 2px solid #E2E8F0; padding-bottom: 10px; font-weight: 600; }}
   .charts {{ display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }}
-  .charts img {{ width: 100%; border-radius: 8px; border: 1px solid #e0e0e0; }}
+  .charts img {{ width: 100%; border-radius: 4px; border: 1px solid #E2E8F0; }}
   table {{ width: 100%; border-collapse: collapse; font-size: 0.9em; }}
-  th {{ background: #1565C0; color: white; padding: 12px 14px; text-align: left; }}
-  td {{ padding: 10px 14px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }}
-  tr:hover td {{ background: #f8fbff; }}
-  .footer {{ text-align: center; padding: 30px; color: #999; font-size: 0.9em; }}
+  th {{ background: #F8FAFC; color: #475569; padding: 12px 14px; text-align: left; text-transform: uppercase; font-size: 0.85em; letter-spacing: 0.5px; border-bottom: 2px solid #E2E8F0; }}
+  td {{ padding: 12px 14px; border-bottom: 1px solid #F1F5F9; vertical-align: top; color: #334155; }}
+  tr:hover td {{ background: #F8FAFC; }}
+  .footer {{ text-align: center; padding: 30px; color: #94A3B8; font-size: 0.9em; }}
 </style>
 </head>
 <body>
@@ -228,9 +229,9 @@ def generate_html(cases: list[dict], rai_log: list[dict], responses: list[dict])
   <div class="stats-grid">
     <div class="stat-card"><div class="num">{total}</div><div class="label">Total Cases</div></div>
     <div class="stat-card"><div class="num">{reviewed}</div><div class="label">Cases Reviewed</div></div>
-    <div class="stat-card"><div class="num" style="color:#4CAF50">{accepted}</div><div class="label">AI Accepted</div></div>
-    <div class="stat-card"><div class="num" style="color:#FF9800">{edited}</div><div class="label">AI Edited</div></div>
-    <div class="stat-card"><div class="num" style="color:#F44336">{rejected}</div><div class="label">AI Rejected</div></div>
+    <div class="stat-card"><div class="num" style="color:#6CC04A">{accepted}</div><div class="label">AI Accepted</div></div>
+    <div class="stat-card"><div class="num" style="color:#FDB813">{edited}</div><div class="label">AI Edited</div></div>
+    <div class="stat-card"><div class="num" style="color:#E2231A">{rejected}</div><div class="label">AI Rejected</div></div>
     <div class="stat-card"><div class="num">{agree_rate}</div><div class="label">Agreement Rate</div></div>
   </div>
 
