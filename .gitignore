@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+.env
+
+# API Keys — NEVER commit these
+.env
+secrets.py
+
+# Output files (generated at runtime)
+outputs/ai_responses/
+outputs/rule_checker_results.json
+outputs/ai_diagnosis_summary.json
+outputs/chart_*.png
+outputs/dashboard_report.html
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
