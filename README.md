@@ -43,7 +43,7 @@ NetSage-AI/
 ### 1. Install dependencies
 
 ```bash
-pip install google-generativeai matplotlib
+pip install google-genai matplotlib
 ```
 
 ### 2. Set your Gemini API key
